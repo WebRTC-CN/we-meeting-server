@@ -1,2 +1,2 @@
-# meeting
-a open source multiple meeting project bases on WebRTC
+# Multiplayer interaction meeting
+An open source multiple meeting project bases on WebRTC
