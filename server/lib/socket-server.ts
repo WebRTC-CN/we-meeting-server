@@ -3,15 +3,21 @@ import cookie from 'cookie';
 import Peer from './peer';
 import http from 'http';
 import https from 'https';
+import Logger from './logger';
+
+const logger = new Logger('socket-server');
 
 let io: SocketIO.Server;
 export function setupWebsocket(httpServers: (https.Server | http.Server)[]) {
   io = SocketIO({
-    //path: ''
+    path: '/ws'
   });
   httpServers.forEach((server) => io.attach(server));
 
+  logger.debug('socket.io server start');
+
   io.on('connect', (socket) => {
+    logger.debug('connection request')
     let cookies = cookie.parse(socket.request.headers.cookie || '');
     let token = cookies.token;
     if (!token) {

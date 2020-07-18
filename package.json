@@ -4,7 +4,7 @@
   "description": "An open source multiple meeting project bases on WebRTC",
   "main": "index.js",
   "scripts": {
-    "https_key": "openssl req  -nodes -new -x509  -keyout cert/server.key -out cert/server.cert -subj \"/CN=local.webrtc.cn\"",
+    "https_key": "openssl req  -nodes -new -x509  -keyout cert/server.key -out cert/server.cert -subj \"/CN=local.webrtc.cn:8000\"",
     "tsc": "tsc",
     "lint": "tsc --noEmit && eslint \"**/*.{js,ts}\" --quiet --fix",
     "serve": "tsc && DEBUG=\"multi-meeting*\" node dist/app.js"
