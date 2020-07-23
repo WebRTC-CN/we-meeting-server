@@ -5,6 +5,8 @@ import http from 'http';
 import https from 'https';
 import Logger from './logger';
 
+import { verify } from './userService';
+
 const logger = new Logger('socket-server');
 
 let io: SocketIO.Server;
@@ -16,7 +18,7 @@ export function setupWebsocket(httpServers: (https.Server | http.Server)[]) {
 
   logger.debug('socket.io server start');
 
-  io.on('connect', (socket) => {
+  io.on('connect', async (socket) => {
     logger.debug('connection request')
     let cookies = cookie.parse(socket.request.headers.cookie || '');
     let token = cookies.token;
@@ -24,13 +26,18 @@ export function setupWebsocket(httpServers: (https.Server | http.Server)[]) {
       token = socket.handshake.query.token;
     }
     if (!token) {
-      throw new Error('Authentication fail, token not found');
+      logger.error('Authentication fail, token not found');
+      socket.disconnect(true);
+      return ;
     }
 
-    if (!checkToken(token)) {
-      throw new Error('Authentication fail, token invalidate');
+    const userInfo = await checkToken(token);
+    if (!userInfo) {
+      logger.error('Authentication fail, token invalidate');
+      socket.disconnect(true);
+      return ;
     }
-    new Peer(token, socket);
+    new Peer(userInfo.id, socket, userInfo.name);
   });
 
   return io;
@@ -47,7 +54,12 @@ export function broadcastTo(roomId: string, event: string, data: any) {
  * todo 验证用户信息
  * @param token
  */
-function checkToken(token: string) {
-  
-  return Boolean(token);
+async function checkToken(token: string) {
+  try {
+    const userBean = await verify(token);
+    return userBean;
+  } catch(e) {
+    logger.error(e);
+    return '';
+  }
 }

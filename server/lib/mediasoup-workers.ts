@@ -31,7 +31,7 @@ export async function runMediasoupServer() {
   }
   
   logger.debug('mediasoup start with %s workers, ip: %s', workers.length,
-    config.mediasoup.webRtcTransportOptions.listenIps.map(s => s.ip).join(','));
+  config.mediasoup.webRtcTransportOptions.listenIps.map(s => s.ip).join(','));
 }
 
 function getMediasoupWorker() {

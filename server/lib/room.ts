@@ -38,12 +38,20 @@ export default class Room {
 
   addPeer(peer: Peer) {
     this.peers.set(peer.id, peer);
-    this.broadcast(ROOM_EVENT.ENTER, peer.id);
+    peer.broadcast(ROOM_EVENT.ENTER, {
+      id: peer.id,
+      user: {
+        id: peer.id,
+        name: peer.username
+      }
+    });
   }
 
   removePeer(peer: Peer) {
     this.peers.delete(peer.id);
-    this.broadcast(ROOM_EVENT.LEAVE, peer.id);
+    this.broadcast(ROOM_EVENT.LEAVE, {
+      id: peer.id
+    });
   }
 
   broadcast(event: string, data: any) {
@@ -62,6 +70,10 @@ export default class Room {
       }
       ret.push({
         peerId: peer.id,
+        user: {
+          id: peer.id,
+          name: peer.username
+        },
         producers,
       });
     }

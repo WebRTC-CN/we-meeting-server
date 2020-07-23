@@ -2,9 +2,8 @@ import { WebRtcTransport, RtpParameters, RtpCapabilities } from "mediasoup/lib/t
 import { EventEmitter } from 'events';
 import { Producer, Consumer, DtlsParameters, MediaKind } from 'mediasoup/lib/types';
 import Logger from './logger';
-import Room from "./room";
+import Room, { ROOM_EVENT } from "./room";
 import config from '../config/index'
-
 
 const logger = new Logger('peer');
 
@@ -25,17 +24,19 @@ enum COMMAND {
 export default class Peer extends EventEmitter {
   
   id: string;
+  username?: string;
   room?: Room;
   socket: SocketIO.Socket;
   transports: Map<string, WebRtcTransport> = new Map();
   producers: Map<string, Producer> = new Map();
   consumers: Map<string, Consumer> = new Map();
 
-  constructor(id: string, socket: SocketIO.Socket) {
+  constructor(id: string, socket: SocketIO.Socket, username?: string) {
     super();
     this.setMaxListeners(Infinity);
     this.id = id;
     this.socket = socket;
+    this.username = username;
 
     this.initSocket();
   }
@@ -64,8 +65,11 @@ export default class Peer extends EventEmitter {
       throw new Error(`already in room: ${this.room.id}`);
     }
     const room = await Room.getOrCreateRoom(roomId);
-    room.addPeer(this);
     this.room = room;
+
+    room.addPeer(this);
+    // use socket.io room
+    this.socket.join(roomId);
     return room;
   }
 
@@ -102,10 +106,19 @@ export default class Peer extends EventEmitter {
 
     // producer events
     producer.on('score', (score) => logger.debug(`producer: ${producer.id}, score: ${score}`));
-    // RTCPeerConnection 关闭
+    // RTCPeerConnection closed
     producer.on('transportclose', () => {
       producer.close();
       this.producers.delete(producer.id);
+    });
+
+    this.broadcast(ROOM_EVENT.NEW_PRODUCER, {
+      peerId: this.id,
+      user: {
+        id: this.id,
+        name: this.username
+      },
+      id: producer.id,
     });
 
     return producer;
@@ -252,6 +265,7 @@ export default class Peer extends EventEmitter {
       transport.close();
     }
     this.socket.disconnect();
+    this.room?.removePeer(this);
   }
   
 }
