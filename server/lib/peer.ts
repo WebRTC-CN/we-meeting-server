@@ -118,6 +118,7 @@ export default class Peer extends EventEmitter {
         id: this.id,
         name: this.username
       },
+      kind,
       id: producer.id,
     });
 
@@ -129,6 +130,7 @@ export default class Peer extends EventEmitter {
     producerId: string, 
     rtpCapabilities: RtpCapabilities,
     paused = true,
+    appData = {},
   ) {
     const transport = this.transports.get(transportId);
     if (!transport) {
@@ -137,16 +139,31 @@ export default class Peer extends EventEmitter {
     const consumer = await transport.consume({
       producerId,
       rtpCapabilities,
-      paused
+      paused,
+      appData
     });
     this.consumers.set(consumer.id, consumer);
     
     // consumer Events
     consumer.on('score', (score) => logger.debug(`consumer: ${consumer.id}, score: ${score}`));
+    const onClosed = () => {
+      consumer.close();
+      this.consumers.delete(consumer.id);
+      this.notify('consumerClosed', {
+        id: consumer.id,
+        appData: consumer.appData
+      });
+    };
+    consumer
+      .on('transportclose', () => {
+        logger.debug('transportclose');
+        onClosed();
+      })
+      .on('producerclose', () => {
+        logger.debug('producerclose');
+        onClosed();
+      });
 
-    consumer.on('transportclose', () => this.consumers.delete(consumer.id))
-      .on('producerclose', () => this.consumers.delete(consumer.id));
-      
     return consumer;
   }
 
@@ -194,12 +211,13 @@ export default class Peer extends EventEmitter {
         }
         case COMMAND.CREATE_CONSUMER: {
           checkParameterExist(data, ['transportId', 'producerId', 'rtpCapabilities']);
-          const { transportId, producerId, rtpCapabilities } = data;
+          const { transportId, producerId, rtpCapabilities, appData } = data;
           const consumer = await this.createConsumer(
             transportId,
             producerId,
             rtpCapabilities,
-            data.paused
+            data.paused,
+            appData,
           );
           accept({
             id: consumer.id,
@@ -239,7 +257,7 @@ export default class Peer extends EventEmitter {
   } 
 
   handleEvent(name: string, data: any) {
-
+    
   }
 
   broadcast(event: string, data: any) {
