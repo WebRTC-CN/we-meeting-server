@@ -25,6 +25,7 @@
     "@types/express": "^4.17.7",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/node": "^14.0.23",
+    "@types/sdp-transform": "^2.4.4",
     "@types/socket.io": "^2.1.8",
     "@types/uuid": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^3.6.1",
@@ -37,8 +38,10 @@
     "cookie": "^0.4.1",
     "debug": "^4.1.1",
     "express": "^4.17.1",
+    "h264-profile-level-id": "^1.0.1",
     "jsonwebtoken": "^8.5.1",
     "mediasoup": "^3.6.12",
+    "sdp-transform": "^2.14.0",
     "socket.io": "^2.3.0",
     "uuid": "^8.2.0"
   }

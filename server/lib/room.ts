@@ -32,7 +32,7 @@ export default class Room {
     this.mediaRouter = mediaRouter;
   }
 
-  get rtbCapabilities() {
+  get rtpCapabilities() {
     return this.mediaRouter.rtpCapabilities;
   }
 
@@ -56,6 +56,14 @@ export default class Room {
 
   broadcast(event: string, data: any) {
     broadcastTo(this.id, event, data);
+  }
+
+  getProducersOf(peerId: string) {
+    const peer = this.peers.get(peerId);
+    if (peer === undefined) {
+      return null
+    }
+    return [...peer.producers.values()];
   }
 
   getAllPeerProducers() {
