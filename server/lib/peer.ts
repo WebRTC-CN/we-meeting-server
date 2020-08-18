@@ -63,6 +63,7 @@ export default class Peer extends EventEmitter {
     });
 
     this.socket.on('disconnect', () => {
+      logger.debug('socket close, peer will destroy, %s', this.id);
       this.destroy();
     });
   }
