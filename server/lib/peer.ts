@@ -272,7 +272,10 @@ export default class Peer extends EventEmitter {
         }
         case COMMAND.GET_ANSWER_SDP: {
           checkParameterExist(data, ['transportId', 'sdp']);
-          this.createAnswerSdp(data).then(accept, reject);
+          this.createAnswerSdp(data).then(accept, (e) => {
+            logger.error(e);
+            reject(e);
+          });
           break;
         }
         case 'connectTransportWithOffer': {
@@ -332,7 +335,13 @@ export default class Peer extends EventEmitter {
     const offer = offerSdp.createOffer(consumerList, version);
     return {
       sdp: offer,
-      consumers: consumerList.map(consumer => consumer.id)
+      consumers: consumerList.map(consumer => {
+        return {
+          id: consumer.id,
+          producerId: consumer.producerId,
+          kind: consumer.kind
+        };
+      })
     };
   }
 
@@ -349,7 +358,7 @@ export default class Peer extends EventEmitter {
       routerCapabilities: this.room!.rtpCapabilities
     });
     const { producerParams, sdp, dtlsParameters } = answerSdp.answerTo(offerSdp);
-    
+    //logger.debug(producerParams);
     // connect if transport isn't connected
     if (transport.dtlsState !== 'connected') {
       // role 'client' will be error
@@ -401,6 +410,7 @@ export default class Peer extends EventEmitter {
         });
       });
     }
+    //logger.debug('answer: %s', sdp);
     return { 
       sdp, 
       producers: [...this._trackToProducer.values()]

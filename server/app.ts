@@ -53,7 +53,7 @@ function runWebServer() {
   
   function authMiddleware(req: any, res: express.Response, next: () => void) {
     let cookies = cookie.parse(req.headers.cookie || '');
-    const token = cookies.token;
+    const token = cookies.token || req.headers['x-wm-token'];
     const loginNeeded = {
       code: 602,
       message: '未登录',
