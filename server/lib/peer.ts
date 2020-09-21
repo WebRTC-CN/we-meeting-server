@@ -238,6 +238,7 @@ export default class Peer extends EventEmitter {
             type: consumer.type,
             kind: consumer.kind,
             producerPaused: consumer.producerPaused,
+            appData,
           });
           break;
         }
@@ -419,7 +420,19 @@ export default class Peer extends EventEmitter {
   }
 
   handleEvent(name: string, data: any) {
-    
+    switch(name) {
+      case 'producerClosed': {
+        const { producerId } = data;
+        const producer = this.producers.get(producerId);
+        if (producer) {
+          producer.close();
+          this.producers.delete(producerId);
+        } else {
+          logger.warn(`producerId: "${producerId}" not found`);
+        }
+        break;
+      }
+    }
   }
 
   broadcast(event: string, data: any) {
